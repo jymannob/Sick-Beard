@@ -57,15 +57,15 @@ class LIBERTALIAProvider(generic.TorrentProvider):
         if audio_lang == "en" and french==None:
             results.append( urllib.urlencode( {
                 'name': searchString                            
-            } ) + "*VO*&cat%5B%5D="+cat+"&[PARAMSTR]=" + searchString +" VO" )
+            } ) + "*VO*&cat%5B%5D="+cat+"&[PARAMSTR]=" + searchString  )
         elif audio_lang == "en" and french==None:
             results.append( urllib.urlencode( {
                 'name': searchString                            
-            } ) + "*VO*&cat%5B%5D="+cat+"&[PARAMSTR]=" + searchString +" VO" )
+            } ) + "*VO*&cat%5B%5D="+cat+"&[PARAMSTR]=" + searchString  )
         elif audio_lang == "fr" or french:
             results.append( urllib.urlencode( {
                 'name': searchString
-            } ) + "*FRENCH*&cat%5B%5D="+cat+"&[PARAMSTR]=" + searchString +" FRENCH")
+            } ) + "*FRENCH*&cat%5B%5D="+cat+"&[PARAMSTR]=" + searchString )
         else:
             results.append( urllib.urlencode( {
                 'name': searchString
@@ -150,7 +150,17 @@ class LIBERTALIAProvider(generic.TorrentProvider):
                 #bypass first row because title only  
                 columns = row.find('td', {"class" : "torrent_name"} )                            
                 logger.log(u"LIBERTALIA found rows ! " , logger.DEBUG) 
-                link = columns.find("a",  href=re.compile("torrents"))                    
+                isvfclass = row.find('td', {"class" : "sprite-vf"} )
+                isvostfrclass = row.find('td', {"class" : "sprite-vostfr"} ) 
+                link = columns.find("a",  href=re.compile("torrents"))  
+                if link: 
+                  if isvostfrclass and str(show.audio_lang)=='fr':
+                    logger.log(u"LIBERTALIA found VOSTFR et demande *"+str(show.audio_lang)+"* je skip ! " + link.text , logger.DEBUG)
+                    link = columns.find("a",  href=re.compile("nepastrouver"))                     
+                if link:     
+                  if isvfclass  and  str(show.audio_lang)!='fr'  :                     
+                    logger.log(u"LIBERTALIA found VF et demande *"+str(show.audio_lang)+"* je skip ! " + link.text , logger.DEBUG)
+                    link = columns.find("a",  href=re.compile("nepastrouver"))     
                 if link:               
                     title = link.text
                     recherched=searchUrl.split("&[PARAMSTR]=")[1]
@@ -170,7 +180,9 @@ class LIBERTALIAProvider(generic.TorrentProvider):
                             results.append( LIBERTALIASearchResult( self.opener, title, downloadURL, quality, 'fr' ) )
                         else:
                             results.append( LIBERTALIASearchResult( self.opener, title, downloadURL, quality ) )
-                    
+        else:
+            logger.log(u"Pas de table trouvée ! je délogue", logger.DEBUG)
+            self.login_done = False             
         return results
     
     def getResult(self, episodes):
