@@ -35,6 +35,7 @@ __all__ = ['ezrss',
            'ethor',
            'xthor',
            'thinkgeek',
+           'bluetigers',
            ]
 
 import sickbeard
